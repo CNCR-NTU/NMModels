@@ -1,0 +1,74 @@
+-- Libraries used --
+
+Library IEEE;
+use IEEE.std_logic_1164.all;
+use IEEE.numeric_std.all;
+use IEEE.std_logic_unsigned.all;
+
+entity LIF is
+port (clk		: IN std_logic;
+		reset		: IN std_logic;
+		sw			: IN std_logic; 
+		waddr		: OUT natural range 0 to 2**ADDR_WIDTH - 1;
+		data		: OUT std_logic_vector((DATA_WIDTH-1) downto 0);
+		we			: OUT std_logic;
+		res		: OUT std_logic;
+		queue		: out 	natural range 0 to 2**ADDR_WIDTH - 1;
+		debug		: OUT std_logic_vector (15 downto 0))
+end LIF;
+
+-- architecture body --
+architecture LIF_arch of LIF is
+
+-- declaration : constant and signals --
+constant	abs_ref_aux: 	std_logic_vector (15 downto 0)	:=x"0005";		-- absolute refractory period = 5 ms --
+constant v_th_aux:		std_logic_vector (15 downto 0)	:=x"000A";		-- threshold voltage = 10 mV --
+constant cap_aux: 		std_logic_vector (15 downto 0)	:=x"0001";		-- capacitance = 1nF --
+constant	res_aux: 		std_logic_vector (15 downto 0)	:=x"0028";		-- Leaky resistance = 40 Mohm --
+constant v_res_aux:		std_logic_vector (15 downto 0)	:=x"0002";		-- threshold voltage = 2 mV --
+constant v_spike_aux:	std_logic_vector (15 downto 0)	:=x"0032";		-- threshold voltage = 50 mV --
+constant weight_aux:		std_logic_vector (15 downto 0)	:=x"0002";		-- weight = 2 --
+signal 	V:					std_logic_vector (15 downto 0);
+signal 	ref:				std_logic_vector (15 downto 0);
+signal 	count:			natural	:=0;
+
+begin
+		--- process ---
+	process 
+	begin
+		wait until clk'EVENT and clk = '1';
+		if reset='1' then
+			res<='0';
+			count<=0;
+			V<=0;
+			we<='0';
+			waddr<=
+		if sw='1' then
+			
+			
+				ref <= abs_ref_aux;
+				V <= v_res_aux;
+				flag<='0';
+			elsif (reset ='1') and (flag='0') then
+				ref <= abs_ref_aux;
+				V <= v_res_aux;
+			elsif (reset ='0') and (flag='0') then
+				if (ref > 0) then
+					ref <= ref-1;
+					V <= v_res_aux;
+				elsif (V=v_spike_aux) then
+					ref <= abs_ref_aux;
+					V <= v_res_aux;
+				elsif (V > v_th_aux) then
+					V <= v_spike_aux;
+					ref <= abs_ref_aux;
+				else
+					V <= std_logic_vector(unsigned(V)-((unsigned(V)/(unsigned(res_aux)*unsigned(cap_aux))) + (unsigned(weight_aux)/unsigned(cap_aux))));
+				end if;
+			end if;
+		else
+			V<="0000000000000000";
+		end if;
+			voltage <= V;
+	end process;
+end leaky_IF_arch;
